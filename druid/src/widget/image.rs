@@ -142,7 +142,7 @@ impl<T: Data> Widget<T> for Image {
             ctx.clip(clip_rect);
         }
         self.image_data
-            .to_piet(offset_matrix, ctx, self.interpolation);
+            .draw(offset_matrix, ctx, self.interpolation);
     }
 }
 
@@ -183,8 +183,15 @@ impl ImageData {
         Size::new(self.x_pixels as f64, self.y_pixels as f64)
     }
 
-    /// Convert ImageData into Piet draw instructions.
-    fn to_piet(&self, offset_matrix: Affine, ctx: &mut PaintCtx, interpolation: InterpolationMode) {
+    /// Draw the image data.
+    /// This function is meant to be called from the [`Widget::paint`] method.
+    /// See: [`Image`]
+    pub fn draw(
+        &self,
+        offset_matrix: Affine,
+        ctx: &mut PaintCtx,
+        interpolation: InterpolationMode,
+    ) {
         ctx.with_save(|ctx| {
             ctx.transform(offset_matrix);
             let size = self.get_size();
