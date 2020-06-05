@@ -171,6 +171,16 @@ pub struct ImageData {
 }
 
 impl ImageData {
+    /// Create `ImageData` from raw parts.
+    pub fn new(pixels: Vec<u8>, x_pixels: u32, y_pixels: u32, format: ImageFormat) -> ImageData {
+        ImageData {
+            pixels,
+            x_pixels,
+            y_pixels,
+            format,
+        }
+    }
+
     /// Create an empty Image
     pub fn empty() -> Self {
         ImageData {
