@@ -21,8 +21,8 @@ use std::{convert::AsRef, error::Error, path::Path};
 use crate::{
     piet::{ImageFormat, InterpolationMode},
     widget::common::FillStrat,
-    Affine, BoxConstraints, Data, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx,
-    PaintCtx, Rect, RenderContext, Size, UpdateCtx, Widget,
+    BoxConstraints, Data, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, Rect,
+    RenderContext, Size, UpdateCtx, Widget,
 };
 
 /// A widget that renders a bitmap Image.
@@ -141,18 +141,7 @@ impl<T: Data> Widget<T> for Image {
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, _data: &T, _env: &Env) {
-        let offset_matrix = self
-            .fill
-            .affine_to_fill(ctx.size(), self.image_data.get_size());
-
-        // The ImageData's `draw` function does not clip to the image's size
-        // CairoRenderContext is very like druids but with some extra goodies like clip
-        if self.fill != FillStrat::Contain {
-            let clip_rect = Rect::ZERO.with_size(ctx.size());
-            ctx.clip(clip_rect);
-        }
-        self.image_data
-            .draw(offset_matrix, ctx, self.interpolation);
+        self.image_data.draw(self.fill, ctx, self.interpolation);
     }
 }
 
@@ -206,10 +195,18 @@ impl ImageData {
     /// This method is meant to be called from [`Widget::paint`].
     pub fn draw(
         &self,
-        offset_matrix: Affine,
+        fill_strategy: FillStrat,
         ctx: &mut PaintCtx,
         interpolation: InterpolationMode,
     ) {
+        let offset_matrix = fill_strategy.affine_to_fill(ctx.size(), self.get_size());
+
+        // Apply clipping to the image
+        if fill_strategy != FillStrat::Contain {
+            let clip_rect = Rect::ZERO.with_size(ctx.size());
+            ctx.clip(clip_rect);
+        }
+
         ctx.with_save(|ctx| {
             ctx.transform(offset_matrix);
             let size = self.get_size();
